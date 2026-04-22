@@ -99,13 +99,18 @@ class WindowSnapper {
         this.#signals.connect(this.#window, 'position-changed', this.#onWindowMoved.bind(this));
     }
 
+    // Whether the snap latch is currently on for this drag.
+    get isSticky() {
+        return this.#snappingOperation ? this.#snappingOperation.isSticky : false;
+    }
+
     // Latch sticky snapping on immediately (e.g. after a restart-grab
     // triggered by an RMB tap) and populate the overlay from the current
     // pointer position without requiring mouse motion.
     activateSticky() {
         if (!this.#snappingOperation) return;
         this.#snappingOperation.setSticky(true);
-        this.#onWindowMoved();
+        this.refreshFromPointer();
     }
 
     // Release the sticky latch (e.g. the user pressed Escape).
@@ -113,6 +118,21 @@ class WindowSnapper {
         if (!this.#snappingOperation) return;
         this.#snappingOperation.setSticky(false);
         this.#container.hide();
+        this.#drawingArea.queue_repaint();
+    }
+
+    // Run an onMotion pass for the current pointer position, show the
+    // overlay if needed, and repaint. Used both for window motion events
+    // and for DragSession's activation poller (to catch RMB-press-without-
+    // motion before Muffin's tear-down of the grab).
+    refreshFromPointer() {
+        if (!this.#snappingOperation) return;
+        const [x, y, state] = global.get_pointer();
+        const result = this.#snappingOperation.onMotion(x, y, state);
+        if (!(result && result.shouldRedraw)) return;
+        if (this.#snappingOperation.showRegions) {
+            this.#container.show();
+        }
         this.#drawingArea.queue_repaint();
     }
 
@@ -163,19 +183,9 @@ class WindowSnapper {
         cr.$dispose();
     }
 
-    // Run an onMotion pass for the current pointer position, show the
-    // overlay if needed, and repaint. Connected to position-changed on
-    // the window, and also invoked directly from activateSticky() so we
-    // can render without requiring mouse motion.
+    // position-changed signal handler on the dragged window.
     #onWindowMoved() {
-        if (!this.#snappingOperation) return;
-        const [x, y, state] = global.get_pointer();
-        const result = this.#snappingOperation.onMotion(x, y, state);
-        if (!(result && result.shouldRedraw)) return;
-        if (this.#snappingOperation.showRegions) {
-            this.#container.show();
-        }
-        this.#drawingArea.queue_repaint();
+        this.refreshFromPointer();
     }
 }
 

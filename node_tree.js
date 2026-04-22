@@ -832,6 +832,8 @@ class SnappingOperation extends LayoutOperation {
         this.#stickySnap = !!stickySnap;
     }
 
+    get isSticky() { return this.#sticky; }
+
     // Set the sticky-snap latch. Called externally to activate (after an
     // RMB-tap restart) or to cancel (on Escape). onMotion also latches it
     // automatically on first normal activation under sticky mode.

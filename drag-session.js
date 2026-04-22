@@ -30,6 +30,7 @@ class DragSession {
     #restarts = 0;
     #pendingRestartId = 0;
     #escapeFilterId = 0;
+    #activationPollerId = 0;
 
     /**
      * @param {Meta.Window} params.window     window being dragged
@@ -49,7 +50,10 @@ class DragSession {
             this.#snappers.push(this.#buildSnapper(i));
         }
 
-        if (options.stickySnap) this.#installEscapeFilter();
+        if (options.stickySnap) {
+            this.#installEscapeFilter();
+            this.#startActivationPoller();
+        }
     }
 
     // A grab-begin fired while we're alive — that's our own restart landing.
@@ -78,6 +82,7 @@ class DragSession {
             GLib.source_remove(this.#pendingRestartId);
             this.#pendingRestartId = 0;
         }
+        this.#stopActivationPoller();
         this.#removeEscapeFilter();
 
         for (const snapper of this.#snappers) {
@@ -174,6 +179,28 @@ class DragSession {
     #onEscape() {
         this.#cancelled = true;
         for (const snapper of this.#snappers) snapper.deactivateSticky();
+    }
+
+    // Until the first activation happens, poll the pointer at 60 Hz so we
+    // pick up RMB-press-without-motion (Muffin doesn't tear down the grab
+    // on press in that case, and button events don't reach JS during a
+    // MOVING grab, so there's no event-driven trigger). Self-terminates
+    // as soon as any snapper reports sticky = true.
+    #startActivationPoller() {
+        this.#activationPollerId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 16, () => {
+            if (this.#snappers.some(s => s.isSticky)) {
+                this.#activationPollerId = 0;
+                return GLib.SOURCE_REMOVE;
+            }
+            for (const snapper of this.#snappers) snapper.refreshFromPointer();
+            return GLib.SOURCE_CONTINUE;
+        });
+    }
+
+    #stopActivationPoller() {
+        if (!this.#activationPollerId) return;
+        GLib.source_remove(this.#activationPollerId);
+        this.#activationPollerId = 0;
     }
 }
 
