@@ -18,7 +18,7 @@ const MAX_RESTARTS = 100;
  * uninterrupted drag.
  *
  * Sticky mode layers on: once activated during the drag, the snap
- * overlay stays visible until LMB release commits or Escape cancels.
+ * overlay stays visible until LMB release commits.
  */
 class DragSession {
     #window;
@@ -29,7 +29,6 @@ class DragSession {
     #cancelled = false;
     #restarts = 0;
     #pendingRestartId = 0;
-    #escapeFilterId = 0;
     #activationPollerId = 0;
 
     /**
@@ -51,7 +50,6 @@ class DragSession {
         }
 
         if (options.stickySnap) {
-            this.#installEscapeFilter();
             this.#startActivationPoller();
         }
     }
@@ -83,7 +81,6 @@ class DragSession {
             this.#pendingRestartId = 0;
         }
         this.#stopActivationPoller();
-        this.#removeEscapeFilter();
 
         for (const snapper of this.#snappers) {
             if (!this.#cancelled) snapper.finalize();
@@ -156,29 +153,6 @@ class DragSession {
         if (this.#options.activateWithNonPrimaryButton) {
             for (const snapper of this.#snappers) snapper.activateSticky();
         }
-    }
-
-    #installEscapeFilter() {
-        // Muffin does not consume key events during a MOVING grab, so a
-        // Clutter filter sees them.
-        this.#escapeFilterId = Clutter.event_add_filter(null, (event) => {
-            if (event.type() !== Clutter.EventType.KEY_PRESS) return Clutter.EVENT_PROPAGATE;
-            if (event.get_key_symbol() !== Clutter.KEY_Escape) return Clutter.EVENT_PROPAGATE;
-            this.#onEscape();
-            return Clutter.EVENT_STOP;
-        });
-    }
-
-    #removeEscapeFilter() {
-        if (!this.#escapeFilterId) return;
-        try { Clutter.event_remove_filter(this.#escapeFilterId); }
-        catch (_) { /* ignore */ }
-        this.#escapeFilterId = 0;
-    }
-
-    #onEscape() {
-        this.#cancelled = true;
-        for (const snapper of this.#snappers) snapper.deactivateSticky();
     }
 
     // Until the first activation happens, poll the pointer at 60 Hz so we

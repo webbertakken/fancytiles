@@ -113,14 +113,6 @@ class WindowSnapper {
         this.refreshFromPointer();
     }
 
-    // Release the sticky latch (e.g. the user pressed Escape).
-    deactivateSticky() {
-        if (!this.#snappingOperation) return;
-        this.#snappingOperation.setSticky(false);
-        this.#container.hide();
-        this.#drawingArea.queue_repaint();
-    }
-
     // Run an onMotion pass for the current pointer position, show the
     // overlay if needed, and repaint. Used both for window motion events
     // and for DragSession's activation poller (to catch RMB-press-without-
