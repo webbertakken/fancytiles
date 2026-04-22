@@ -99,32 +99,21 @@ class WindowSnapper {
         this.#signals.connect(this.#window, 'position-changed', this.#onWindowMoved.bind(this));
     }
 
-    // Latch sticky snapping on immediately (e.g. after a restart-grab triggered
-    // by an RMB tap) and populate the overlay from the current pointer position.
+    // Latch sticky snapping on immediately (e.g. after a restart-grab
+    // triggered by an RMB tap) and populate the overlay from the current
+    // pointer position without requiring mouse motion.
     activateSticky() {
         if (!this.#snappingOperation) return;
         this.#snappingOperation.setSticky(true);
-        this.#forceMotionUpdate();
+        this.#onWindowMoved();
     }
 
-    // Release the sticky latch (e.g. user pressed Escape). Clears the overlay.
+    // Release the sticky latch (e.g. the user pressed Escape).
     deactivateSticky() {
         if (!this.#snappingOperation) return;
         this.#snappingOperation.setSticky(false);
-        if (this.#container) this.#container.hide();
-        if (this.#drawingArea) this.#drawingArea.queue_repaint();
-    }
-
-    #forceMotionUpdate() {
-        if (!this.#snappingOperation) return;
-        const [x, y, state] = global.get_pointer();
-        const result = this.#snappingOperation.onMotion(x, y, state);
-        if (result && result.shouldRedraw) {
-            if (this.#snappingOperation.showRegions) {
-                this.#container.show();
-            }
-            this.#drawingArea.queue_repaint();
-        }
+        this.#container.hide();
+        this.#drawingArea.queue_repaint();
     }
 
     // snap if the user wants to
@@ -174,20 +163,19 @@ class WindowSnapper {
         cr.$dispose();
     }
 
-    #onWindowMoved(actor, event) {
-        if (!this.#snappingOperation) {
-            return;
+    // Run an onMotion pass for the current pointer position, show the
+    // overlay if needed, and repaint. Connected to position-changed on
+    // the window, and also invoked directly from activateSticky() so we
+    // can render without requiring mouse motion.
+    #onWindowMoved() {
+        if (!this.#snappingOperation) return;
+        const [x, y, state] = global.get_pointer();
+        const result = this.#snappingOperation.onMotion(x, y, state);
+        if (!(result && result.shouldRedraw)) return;
+        if (this.#snappingOperation.showRegions) {
+            this.#container.show();
         }
-
-        let [x, y, state] = global.get_pointer();
-
-        let result = this.#snappingOperation.onMotion(x, y, state);
-        if (result && result.shouldRedraw) {
-            if (this.#snappingOperation.showRegions) {
-                this.#container.show();
-            }
-            this.#drawingArea.queue_repaint();
-        }
+        this.#drawingArea.queue_repaint();
     }
 }
 

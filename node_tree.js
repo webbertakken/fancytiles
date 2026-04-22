@@ -832,11 +832,9 @@ class SnappingOperation extends LayoutOperation {
         this.#stickySnap = !!stickySnap;
     }
 
-    // Whether sticky snapping is currently latched on for this drag.
-    // Set externally (from the restart-grab path in Application) or
-    // automatically latched inside onMotion on first normal activation.
-    get isSticky() { return this.#sticky; }
-
+    // Set the sticky-snap latch. Called externally to activate (after an
+    // RMB-tap restart) or to cancel (on Escape). onMotion also latches it
+    // automatically on first normal activation under sticky mode.
     setSticky(value) {
         if (this.#sticky === value) return;
         this.#sticky = !!value;
