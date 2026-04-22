@@ -42,9 +42,12 @@ class WindowSnapper {
     // whether to use the non-primary button to activate snapping
     #activateWithNonPrimaryButton;
 
+    // whether sticky snapping (tap-to-latch) is enabled
+    #stickySnap;
+
     #signals = new SignalManager.SignalManager(null);
 
-    constructor(displayIdx, layout, window, enableSnappingModifiers, enableMultiSnappingModifiers, enableAdjacentMerging, mergingRadius, activateWithNonPrimaryButton) {
+    constructor(displayIdx, layout, window, enableSnappingModifiers, enableMultiSnappingModifiers, enableAdjacentMerging, mergingRadius, activateWithNonPrimaryButton, stickySnap) {
         // the layout to use for the snapping operation
         this.#layout = layout;
 
@@ -64,6 +67,9 @@ class WindowSnapper {
 
         // whether to use the non-primary button to activate snapping
         this.#activateWithNonPrimaryButton = activateWithNonPrimaryButton;
+
+        // whether sticky snapping is enabled
+        this.#stickySnap = !!stickySnap;
 
         // get the size of the display
         let workArea = getUsableScreenArea(displayIdx);
@@ -88,9 +94,37 @@ class WindowSnapper {
 
         // ensure the layout is correct for the snap area
         this.#layout.calculateRects(workArea.x, workArea.y, workArea.width, workArea.height);
-        this.#snappingOperation = new SnappingOperation(this.#layout, this.#enableSnappingModifiers, this.#enableMultiSnappingModifiers, this.#enableAdjacentMerging, this.#mergingRadius, this.#activateWithNonPrimaryButton);
+        this.#snappingOperation = new SnappingOperation(this.#layout, this.#enableSnappingModifiers, this.#enableMultiSnappingModifiers, this.#enableAdjacentMerging, this.#mergingRadius, this.#activateWithNonPrimaryButton, this.#stickySnap);
 
         this.#signals.connect(this.#window, 'position-changed', this.#onWindowMoved.bind(this));
+    }
+
+    // Latch sticky snapping on immediately (e.g. after a restart-grab triggered
+    // by an RMB tap) and populate the overlay from the current pointer position.
+    activateSticky() {
+        if (!this.#snappingOperation) return;
+        this.#snappingOperation.setSticky(true);
+        this.#forceMotionUpdate();
+    }
+
+    // Release the sticky latch (e.g. user pressed Escape). Clears the overlay.
+    deactivateSticky() {
+        if (!this.#snappingOperation) return;
+        this.#snappingOperation.setSticky(false);
+        if (this.#container) this.#container.hide();
+        if (this.#drawingArea) this.#drawingArea.queue_repaint();
+    }
+
+    #forceMotionUpdate() {
+        if (!this.#snappingOperation) return;
+        const [x, y, state] = global.get_pointer();
+        const result = this.#snappingOperation.onMotion(x, y, state);
+        if (result && result.shouldRedraw) {
+            if (this.#snappingOperation.showRegions) {
+                this.#container.show();
+            }
+            this.#drawingArea.queue_repaint();
+        }
     }
 
     // snap if the user wants to

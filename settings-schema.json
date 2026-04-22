@@ -22,6 +22,12 @@
     "description": "Activate snapping with secondary mouse button",
     "tooltip": "When enabled, holding the secondary mouse button while dragging activates snapping mode. Snapping mode is always activated when both the key modifier is set to (none) and activating with the secondary mouse button is disabled.",
     "default": false
+  },
+  "stickySnap": {
+    "type": "switch",
+    "description": "Sticky snapping (tap to latch)",
+    "tooltip": "When enabled, a single press of the activator (secondary mouse button or modifier key) latches snapping on for the rest of the drag \u2014 you do not need to keep holding it. Release the primary mouse button to commit the snap, or press Escape to cancel. When disabled, you must hold the activator throughout the drag (classic behavior).",
+    "default": false
   },  
   "enableMultiSnappingModifiers": {
     "type": "combobox",

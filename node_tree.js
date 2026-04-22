@@ -817,29 +817,63 @@ class SnappingOperation extends LayoutOperation {
     #enableAdjacentMerging;
     #mergingRadius;
     #activateWithNonPrimaryButton;
+    #stickySnap;
+    #sticky = false;
     #previousHighlightedNodes = null;
     #previousInsetNodeRect = null;
 
-    constructor(tree, enableSnappingModifiers, enableMultiSnappingModifiers, enableAdjacentMerging, mergingRadius, activateWithNonPrimaryButton) {
+    constructor(tree, enableSnappingModifiers, enableMultiSnappingModifiers, enableAdjacentMerging, mergingRadius, activateWithNonPrimaryButton, stickySnap) {
         super(tree);
         this.#enableSnappingModifiers = enableSnappingModifiers;
         this.#enableMultiSnappingModifiers = enableMultiSnappingModifiers;
         this.#enableAdjacentMerging = enableAdjacentMerging;
         this.#mergingRadius = mergingRadius;
         this.#activateWithNonPrimaryButton = activateWithNonPrimaryButton;
+        this.#stickySnap = !!stickySnap;
+    }
+
+    // Whether sticky snapping is currently latched on for this drag.
+    // Set externally (from the restart-grab path in Application) or
+    // automatically latched inside onMotion on first normal activation.
+    get isSticky() { return this.#sticky; }
+
+    setSticky(value) {
+        if (this.#sticky === value) return;
+        this.#sticky = !!value;
+        if (!this.#sticky) {
+            // Turning sticky off — clear destinations and hide overlay.
+            this.cancel();
+        }
     }
 
     onMotion(x, y, state) {
-        let snappingEnabled;
-
         const Clutter = imports.gi.Clutter;
         const secondaryButtonPressed = (state & Clutter.ModifierType.BUTTON3_MASK);
         const modifierPressed = this.#enableSnappingModifiers.some((e) => (state & e));
         const noModifierRequired = this.#enableSnappingModifiers.length == 0 && !this.#activateWithNonPrimaryButton;
 
-        snappingEnabled = (this.#activateWithNonPrimaryButton && secondaryButtonPressed) || modifierPressed || noModifierRequired;
+        const normalEnabled = (this.#activateWithNonPrimaryButton && secondaryButtonPressed) || modifierPressed || noModifierRequired;
+
+        // In sticky mode, latch on as soon as a normal activation is seen,
+        // and stay latched regardless of current button/modifier state.
+        if (this.#stickySnap && normalEnabled) {
+            this.#sticky = true;
+        }
+        const snappingEnabled = this.#sticky || normalEnabled;
 
         if (!snappingEnabled) {
+            return this.cancel();
+        }
+
+        // Multi-monitor: each monitor has its own SnappingOperation, all of
+        // which receive the same global pointer coordinates. A snapper whose
+        // monitor does NOT contain the cursor must not hold stale highlights
+        // — otherwise, on LMB release the stale destination would cause a
+        // spurious snap on that other monitor. Note: this calls cancel() but
+        // cancel() no longer clears the sticky latch, so once the cursor
+        // comes back on-monitor snapping will resume as expected.
+        const r = this.tree.rect;
+        if (!r || x < r.x || x >= r.x + r.width || y < r.y || y >= r.y + r.height) {
             return this.cancel();
         }
 
@@ -968,6 +1002,11 @@ class SnappingOperation extends LayoutOperation {
         this.tree.insetNode = null;
         this.#previousHighlightedNodes = null;
         this.#previousInsetNodeRect = null;
+        // NOTE: cancel() deliberately does NOT clear the sticky latch.
+        // Sticky is owned exclusively by setSticky() (external) and by
+        // destroy(). That lets the multi-monitor off-monitor cleanup in
+        // onMotion call cancel() without killing the sticky state that
+        // belongs to the drag as a whole.
 
         if (this.showRegions) {
             this.showRegions = false;
