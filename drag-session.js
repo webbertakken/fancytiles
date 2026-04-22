@@ -49,9 +49,7 @@ class DragSession {
             this.#snappers.push(this.#buildSnapper(i));
         }
 
-        if (options.stickySnap) {
-            this.#startActivationPoller();
-        }
+        this.#startActivationPoller();
     }
 
     // A grab-begin fired while we're alive — that's our own restart landing.
@@ -62,7 +60,7 @@ class DragSession {
     // Called on grab-op-end. Returns true if we've scheduled a restart
     // (caller keeps the session alive); false if the drag is really over.
     tryRestart() {
-        if (!this.#options.stickySnap || this.#cancelled) return false;
+        if (this.#cancelled) return false;
         if (this.#restarts >= MAX_RESTARTS) {
             global.logWarning(`fancytiles: hit MAX_RESTARTS (${MAX_RESTARTS}), giving up`);
             return false;
@@ -103,7 +101,6 @@ class DragSession {
             o.mergeAdjacentOnHover,
             o.mergingRadius,
             o.activateWithNonPrimaryButton,
-            o.stickySnap,
         );
     }
 

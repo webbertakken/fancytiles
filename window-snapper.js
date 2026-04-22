@@ -42,12 +42,9 @@ class WindowSnapper {
     // whether to use the non-primary button to activate snapping
     #activateWithNonPrimaryButton;
 
-    // whether sticky snapping (tap-to-latch) is enabled
-    #stickySnap;
-
     #signals = new SignalManager.SignalManager(null);
 
-    constructor(displayIdx, layout, window, enableSnappingModifiers, enableMultiSnappingModifiers, enableAdjacentMerging, mergingRadius, activateWithNonPrimaryButton, stickySnap) {
+    constructor(displayIdx, layout, window, enableSnappingModifiers, enableMultiSnappingModifiers, enableAdjacentMerging, mergingRadius, activateWithNonPrimaryButton) {
         // the layout to use for the snapping operation
         this.#layout = layout;
 
@@ -67,9 +64,6 @@ class WindowSnapper {
 
         // whether to use the non-primary button to activate snapping
         this.#activateWithNonPrimaryButton = activateWithNonPrimaryButton;
-
-        // whether sticky snapping is enabled
-        this.#stickySnap = !!stickySnap;
 
         // get the size of the display
         let workArea = getUsableScreenArea(displayIdx);
@@ -94,7 +88,7 @@ class WindowSnapper {
 
         // ensure the layout is correct for the snap area
         this.#layout.calculateRects(workArea.x, workArea.y, workArea.width, workArea.height);
-        this.#snappingOperation = new SnappingOperation(this.#layout, this.#enableSnappingModifiers, this.#enableMultiSnappingModifiers, this.#enableAdjacentMerging, this.#mergingRadius, this.#activateWithNonPrimaryButton, this.#stickySnap);
+        this.#snappingOperation = new SnappingOperation(this.#layout, this.#enableSnappingModifiers, this.#enableMultiSnappingModifiers, this.#enableAdjacentMerging, this.#mergingRadius, this.#activateWithNonPrimaryButton);
 
         this.#signals.connect(this.#window, 'position-changed', this.#onWindowMoved.bind(this));
     }

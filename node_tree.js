@@ -817,19 +817,17 @@ class SnappingOperation extends LayoutOperation {
     #enableAdjacentMerging;
     #mergingRadius;
     #activateWithNonPrimaryButton;
-    #stickySnap;
     #sticky = false;
     #previousHighlightedNodes = null;
     #previousInsetNodeRect = null;
 
-    constructor(tree, enableSnappingModifiers, enableMultiSnappingModifiers, enableAdjacentMerging, mergingRadius, activateWithNonPrimaryButton, stickySnap) {
+    constructor(tree, enableSnappingModifiers, enableMultiSnappingModifiers, enableAdjacentMerging, mergingRadius, activateWithNonPrimaryButton) {
         super(tree);
         this.#enableSnappingModifiers = enableSnappingModifiers;
         this.#enableMultiSnappingModifiers = enableMultiSnappingModifiers;
         this.#enableAdjacentMerging = enableAdjacentMerging;
         this.#mergingRadius = mergingRadius;
         this.#activateWithNonPrimaryButton = activateWithNonPrimaryButton;
-        this.#stickySnap = !!stickySnap;
     }
 
     get isSticky() { return this.#sticky; }
@@ -854,12 +852,12 @@ class SnappingOperation extends LayoutOperation {
 
         const normalEnabled = (this.#activateWithNonPrimaryButton && secondaryButtonPressed) || modifierPressed || noModifierRequired;
 
-        // In sticky mode, latch on as soon as a normal activation is seen,
-        // and stay latched regardless of current button/modifier state.
-        if (this.#stickySnap && normalEnabled) {
+        // Latch on as soon as a normal activation is seen and stay latched
+        // regardless of current button/modifier state until LMB release.
+        if (normalEnabled) {
             this.#sticky = true;
         }
-        const snappingEnabled = this.#sticky || normalEnabled;
+        const snappingEnabled = this.#sticky;
 
         if (!snappingEnabled) {
             return this.cancel();
