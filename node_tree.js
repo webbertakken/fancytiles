@@ -850,7 +850,6 @@ class SnappingOperation extends LayoutOperation {
         const Clutter = imports.gi.Clutter;
         const secondaryButtonPressed = !!(state & Clutter.ModifierType.BUTTON3_MASK);
         const modifierPressed = this.#enableSnappingModifiers.some((e) => (state & e));
-        const noModifierRequired = this.#enableSnappingModifiers.length == 0 && !this.#activateWithNonPrimaryButton;
 
         // Detect rising edges (not-pressed → pressed) for toggle behaviour.
         const modifierRisingEdge = modifierPressed && !this.#prevModifierPressed;
@@ -858,9 +857,7 @@ class SnappingOperation extends LayoutOperation {
         this.#prevModifierPressed = modifierPressed;
         this.#prevSecondaryPressed = secondaryButtonPressed;
 
-        if (noModifierRequired) {
-            this.#sticky = true;
-        } else if (modifierRisingEdge || secondaryRisingEdge) {
+        if (modifierRisingEdge || secondaryRisingEdge) {
             this.#sticky = !this.#sticky;
         }
 
