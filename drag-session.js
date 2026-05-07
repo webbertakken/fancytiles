@@ -143,26 +143,19 @@ class DragSession {
             return;
         }
 
-        // The secondary-button tap that caused Muffin's tear-down is our
-        // cue to latch sticky, but only when the user has opted in to
-        // RMB-activation. Modifier-key activation self-latches on the
-        // next onMotion.
-        if (this.#options.activateWithNonPrimaryButton) {
-            for (const snapper of this.#snappers) snapper.activateSticky();
-        }
+        // After a grab restart, run an onMotion pass on every snapper so
+        // the rising-edge toggle logic in SnappingOperation picks up the
+        // current button/modifier state and activates or deactivates as
+        // appropriate.
+        for (const snapper of this.#snappers) snapper.refreshFromPointer();
     }
 
-    // Until the first activation happens, poll the pointer at 60 Hz so we
-    // pick up RMB-press-without-motion (Muffin doesn't tear down the grab
-    // on press in that case, and button events don't reach JS during a
-    // MOVING grab, so there's no event-driven trigger). Self-terminates
-    // as soon as any snapper reports sticky = true.
+    // Poll the pointer at ~60 Hz for the entire drag.  This catches
+    // activator state changes (modifier key or RMB press/release) that
+    // happen while the mouse is stationary and no position-changed event
+    // fires.  Needed both for initial activation AND for unlatch toggle.
     #startActivationPoller() {
         this.#activationPollerId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 16, () => {
-            if (this.#snappers.some(s => s.isSticky)) {
-                this.#activationPollerId = 0;
-                return GLib.SOURCE_REMOVE;
-            }
             for (const snapper of this.#snappers) snapper.refreshFromPointer();
             return GLib.SOURCE_CONTINUE;
         });

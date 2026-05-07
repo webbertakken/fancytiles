@@ -98,19 +98,9 @@ class WindowSnapper {
         return this.#snappingOperation ? this.#snappingOperation.isSticky : false;
     }
 
-    // Latch sticky snapping on immediately (e.g. after a restart-grab
-    // triggered by an RMB tap) and populate the overlay from the current
-    // pointer position without requiring mouse motion.
-    activateSticky() {
-        if (!this.#snappingOperation) return;
-        this.#snappingOperation.setSticky(true);
-        this.refreshFromPointer();
-    }
-
-    // Run an onMotion pass for the current pointer position, show the
-    // overlay if needed, and repaint. Used both for window motion events
-    // and for DragSession's activation poller (to catch RMB-press-without-
-    // motion before Muffin's tear-down of the grab).
+    // Run an onMotion pass for the current pointer position, show or
+    // hide the overlay as needed, and repaint. Used both for window
+    // motion events and for DragSession's activation poller.
     refreshFromPointer() {
         if (!this.#snappingOperation) return;
         const [x, y, state] = global.get_pointer();
@@ -118,6 +108,8 @@ class WindowSnapper {
         if (!(result && result.shouldRedraw)) return;
         if (this.#snappingOperation.showRegions) {
             this.#container.show();
+        } else {
+            this.#container.hide();
         }
         this.#drawingArea.queue_repaint();
     }

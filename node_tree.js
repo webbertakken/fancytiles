@@ -818,6 +818,8 @@ class SnappingOperation extends LayoutOperation {
     #mergingRadius;
     #activateWithNonPrimaryButton;
     #sticky = false;
+    #prevModifierPressed = false;
+    #prevSecondaryPressed = false;
     #previousHighlightedNodes = null;
     #previousInsetNodeRect = null;
 
@@ -846,17 +848,22 @@ class SnappingOperation extends LayoutOperation {
 
     onMotion(x, y, state) {
         const Clutter = imports.gi.Clutter;
-        const secondaryButtonPressed = (state & Clutter.ModifierType.BUTTON3_MASK);
+        const secondaryButtonPressed = !!(state & Clutter.ModifierType.BUTTON3_MASK);
         const modifierPressed = this.#enableSnappingModifiers.some((e) => (state & e));
         const noModifierRequired = this.#enableSnappingModifiers.length == 0 && !this.#activateWithNonPrimaryButton;
 
-        const normalEnabled = (this.#activateWithNonPrimaryButton && secondaryButtonPressed) || modifierPressed || noModifierRequired;
+        // Detect rising edges (not-pressed → pressed) for toggle behaviour.
+        const modifierRisingEdge = modifierPressed && !this.#prevModifierPressed;
+        const secondaryRisingEdge = this.#activateWithNonPrimaryButton && secondaryButtonPressed && !this.#prevSecondaryPressed;
+        this.#prevModifierPressed = modifierPressed;
+        this.#prevSecondaryPressed = secondaryButtonPressed;
 
-        // Latch on as soon as a normal activation is seen and stay latched
-        // regardless of current button/modifier state until LMB release.
-        if (normalEnabled) {
+        if (noModifierRequired) {
             this.#sticky = true;
+        } else if (modifierRisingEdge || secondaryRisingEdge) {
+            this.#sticky = !this.#sticky;
         }
+
         const snappingEnabled = this.#sticky;
 
         if (!snappingEnabled) {

@@ -6,8 +6,8 @@
   },
   "enableSnappingModifiers": {
     "type": "combobox",
-    "description": "Key modifier to activate snapping",
-    "tooltip": "When set, pressing the key modifier while dragging latches snapping on for the rest of the drag. Snapping mode is always activated when both the key modifier is set to (none) and activating with the secondary mouse button is disabled.",
+    "description": "Key modifier to toggle snapping",
+    "tooltip": "When set, pressing the key modifier while dragging (de)activates the snapping",
     "default": "CTRL",
     "options": {
       "(none)": "",
@@ -19,8 +19,8 @@
   },
   "activateWithNonPrimaryButton": {
     "type": "switch",
-    "description": "Activate snapping with secondary mouse button",
-    "tooltip": "When enabled, pressing the secondary mouse button while dragging latches snapping on for the rest of the drag. Snapping mode is always activated when both the key modifier is set to (none) and activating with the secondary mouse button is disabled.",
+    "description": "toggle snapping with secondary mouse button",
+    "tooltip": "When enabled, pressing the secondary mouse button while dragging (de)activates the snapping",
     "default": false
   },
   "enableMultiSnappingModifiers": {
