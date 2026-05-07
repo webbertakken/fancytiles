@@ -93,9 +93,9 @@ class WindowSnapper {
         this.#signals.connect(this.#window, 'position-changed', this.#onWindowMoved.bind(this));
     }
 
-    // Whether the snap latch is currently on for this drag.
-    get isSticky() {
-        return this.#snappingOperation ? this.#snappingOperation.isSticky : false;
+    // Whether snapping is currently enabled for this drag.
+    get isSnappingEnabled() {
+        return this.#snappingOperation ? this.#snappingOperation.isSnappingEnabled : false;
     }
 
     // Run an onMotion pass for the current pointer position, show or

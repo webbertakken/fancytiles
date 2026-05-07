@@ -817,7 +817,7 @@ class SnappingOperation extends LayoutOperation {
     #enableAdjacentMerging;
     #mergingRadius;
     #activateWithNonPrimaryButton;
-    #sticky = false;
+    #snappingEnabled = false;
     #prevModifierPressed = false;
     #prevSecondaryPressed = false;
     #previousHighlightedNodes = null;
@@ -830,26 +830,25 @@ class SnappingOperation extends LayoutOperation {
         this.#enableAdjacentMerging = enableAdjacentMerging;
         this.#mergingRadius = mergingRadius;
         this.#activateWithNonPrimaryButton = activateWithNonPrimaryButton;
-        this.#sticky = !!autoStartSnapping;
+        this.#snappingEnabled = autoStartSnapping;
     }
 
-    get isSticky() { return this.#sticky; }
+    get isSnappingEnabled() { return this.#snappingEnabled; }
 
-    // Set the sticky-snap latch. Called externally to activate (after an
-    // RMB-tap restart) or to cancel (on Escape). onMotion also latches it
-    // automatically on first normal activation under sticky mode.
-    setSticky(value) {
-        if (this.#sticky === value) return;
-        this.#sticky = !!value;
-        if (!this.#sticky) {
-            // Turning sticky off — clear destinations and hide overlay.
+    // Enable or disable snapping. Called externally to activate (after an
+    // RMB-tap restart) or to cancel (on Escape).
+    setSnappingEnabled(value) {
+        if (this.#snappingEnabled === value) return;
+        this.#snappingEnabled = value;
+        if (!this.#snappingEnabled) {
+            // Disabling snapping — clear destinations and hide overlay.
             this.cancel();
         }
     }
 
     onMotion(x, y, state) {
         const Clutter = imports.gi.Clutter;
-        const secondaryButtonPressed = !!(state & Clutter.ModifierType.BUTTON3_MASK);
+        const secondaryButtonPressed = (state & Clutter.ModifierType.BUTTON3_MASK);
         const modifierPressed = this.#enableSnappingModifiers.some((e) => (state & e));
 
         // Detect rising edges (not-pressed → pressed) for toggle behaviour.
@@ -859,12 +858,10 @@ class SnappingOperation extends LayoutOperation {
         this.#prevSecondaryPressed = secondaryButtonPressed;
 
         if (modifierRisingEdge || secondaryRisingEdge) {
-            this.#sticky = !this.#sticky;
+            this.#snappingEnabled = !this.#snappingEnabled;
         }
 
-        const snappingEnabled = this.#sticky;
-
-        if (!snappingEnabled) {
+        if (!this.#snappingEnabled) {
             return this.cancel();
         }
 
@@ -873,7 +870,7 @@ class SnappingOperation extends LayoutOperation {
         // monitor does NOT contain the cursor must not hold stale highlights
         // — otherwise, on LMB release the stale destination would cause a
         // spurious snap on that other monitor. Note: this calls cancel() but
-        // cancel() no longer clears the sticky latch, so once the cursor
+        // cancel() does not disable snapping, so once the cursor
         // comes back on-monitor snapping will resume as expected.
         const r = this.tree.rect;
         if (!r || x < r.x || x >= r.x + r.width || y < r.y || y >= r.y + r.height) {
@@ -1005,11 +1002,11 @@ class SnappingOperation extends LayoutOperation {
         this.tree.insetNode = null;
         this.#previousHighlightedNodes = null;
         this.#previousInsetNodeRect = null;
-        // NOTE: cancel() deliberately does NOT clear the sticky latch.
-        // Sticky is owned exclusively by setSticky() (external) and by
-        // destroy(). That lets the multi-monitor off-monitor cleanup in
-        // onMotion call cancel() without killing the sticky state that
-        // belongs to the drag as a whole.
+        // NOTE: cancel() deliberately does NOT disable snapping.
+        // The enabled state is owned exclusively by setSnappingEnabled()
+        // (external) and the toggle logic in onMotion(). That lets the
+        // multi-monitor off-monitor cleanup call cancel() without
+        // disabling snapping for the drag as a whole.
 
         if (this.showRegions) {
             this.showRegions = false;

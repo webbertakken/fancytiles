@@ -17,8 +17,9 @@ const MAX_RESTARTS = 100;
  * grip point via explicit anchor coordinates. The effect is an
  * uninterrupted drag.
  *
- * Sticky mode layers on: once activated during the drag, the snap
- * overlay stays visible until LMB release commits.
+ * Snapping can be enabled during the drag via a modifier key or
+ * secondary mouse button; the overlay stays visible until the user
+ * toggles it off or releases LMB to commit.
  */
 class DragSession {
     #window;
@@ -154,7 +155,7 @@ class DragSession {
     // Poll the pointer at ~60 Hz for the entire drag.  This catches
     // activator state changes (modifier key or RMB press/release) that
     // happen while the mouse is stationary and no position-changed event
-    // fires.  Needed both for initial activation AND for unlatch toggle.
+    // fires.  Needed both for initial activation AND for toggling off.
     #startActivationPoller() {
         this.#activationPollerId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 16, () => {
             for (const snapper of this.#snappers) snapper.refreshFromPointer();

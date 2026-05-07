@@ -19,7 +19,7 @@
   },
   "activateWithNonPrimaryButton": {
     "type": "switch",
-    "description": "toggle snapping with secondary mouse button",
+    "description": "Toggle snapping with secondary mouse button",
     "tooltip": "When enabled, pressing the secondary mouse button while dragging (de)activates the snapping",
     "default": false
   },
