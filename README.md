@@ -24,7 +24,7 @@ After you have crafted your desired layout, exit the editor using `<SUPER>+G` or
 
 ![Layout editor](docs/layout-editor.png)
 
-Now, start dragging a window and simultaneously hold the `<CTRL>` key. The layout will become visible. Hover your mouse over the region you want the window to snap to and release the mouse button. The window will now be snapped into place. When the mouse hovers over the border between two regions, these regions are merged into a single region into which the window will snap.
+Now, start dragging a window and press the `<CTRL>` key. The layout will become visible. Hover your mouse over the region you want the window to snap to and release the mouse button. The window will now be snapped into place. When the mouse hovers over the border between two regions, these regions are merged into a single region into which the window will snap. In the settings you can change the modifier key or enable your secondary mouse button to show the layout.
 
 If you want to make the snapping region even larger you can hold the `<ALT>` key and hover over adjacent regions to merge them all into a single large snapping region.
 
