@@ -823,13 +823,14 @@ class SnappingOperation extends LayoutOperation {
     #previousHighlightedNodes = null;
     #previousInsetNodeRect = null;
 
-    constructor(tree, enableSnappingModifiers, enableMultiSnappingModifiers, enableAdjacentMerging, mergingRadius, activateWithNonPrimaryButton) {
+    constructor(tree, enableSnappingModifiers, enableMultiSnappingModifiers, enableAdjacentMerging, mergingRadius, activateWithNonPrimaryButton, autoStartSnapping) {
         super(tree);
         this.#enableSnappingModifiers = enableSnappingModifiers;
         this.#enableMultiSnappingModifiers = enableMultiSnappingModifiers;
         this.#enableAdjacentMerging = enableAdjacentMerging;
         this.#mergingRadius = mergingRadius;
         this.#activateWithNonPrimaryButton = activateWithNonPrimaryButton;
+        this.#sticky = !!autoStartSnapping;
     }
 
     get isSticky() { return this.#sticky; }

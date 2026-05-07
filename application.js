@@ -311,6 +311,7 @@ class Application {
             mergeAdjacentOnHover: s.mergeAdjacentOnHover.value,
             mergingRadius: s.mergingRadius.value,
             activateWithNonPrimaryButton: s.activateWithNonPrimaryButton.value,
+            autoStartSnapping: s.autoStartSnapping.value,
         };
     }
 }

@@ -101,6 +101,7 @@ class DragSession {
             o.mergeAdjacentOnHover,
             o.mergingRadius,
             o.activateWithNonPrimaryButton,
+            o.autoStartSnapping,
         );
     }
 

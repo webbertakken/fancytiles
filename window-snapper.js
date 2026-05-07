@@ -44,7 +44,7 @@ class WindowSnapper {
 
     #signals = new SignalManager.SignalManager(null);
 
-    constructor(displayIdx, layout, window, enableSnappingModifiers, enableMultiSnappingModifiers, enableAdjacentMerging, mergingRadius, activateWithNonPrimaryButton) {
+    constructor(displayIdx, layout, window, enableSnappingModifiers, enableMultiSnappingModifiers, enableAdjacentMerging, mergingRadius, activateWithNonPrimaryButton, autoStartSnapping) {
         // the layout to use for the snapping operation
         this.#layout = layout;
 
@@ -88,7 +88,7 @@ class WindowSnapper {
 
         // ensure the layout is correct for the snap area
         this.#layout.calculateRects(workArea.x, workArea.y, workArea.width, workArea.height);
-        this.#snappingOperation = new SnappingOperation(this.#layout, this.#enableSnappingModifiers, this.#enableMultiSnappingModifiers, this.#enableAdjacentMerging, this.#mergingRadius, this.#activateWithNonPrimaryButton);
+        this.#snappingOperation = new SnappingOperation(this.#layout, this.#enableSnappingModifiers, this.#enableMultiSnappingModifiers, this.#enableAdjacentMerging, this.#mergingRadius, this.#activateWithNonPrimaryButton, autoStartSnapping);
 
         this.#signals.connect(this.#window, 'position-changed', this.#onWindowMoved.bind(this));
     }
